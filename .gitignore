@@ -36,3 +36,6 @@ htmlcov/
 
 # Arquivos de configuração sensíveis
 .env
+
+base/
+.xlsx
