@@ -1,0 +1,38 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Ambiente virtual
+venv/
+.env/
+.venv/
+
+# Distribuição / build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs
+*.log
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# IDEs / editores
+.vscode/
+.idea/
+
+# Arquivos de teste / cobertura
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Arquivos de configuração sensíveis
+.env
