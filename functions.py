@@ -1,13 +1,127 @@
-import os
+import os, json, time
 import pandas as pd
-from config import BASE_FOLDER
+from config import FILES_FOLDER
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
+# payload_content = FILES_FOLDER / "content.jsonl"
+payload_content = FILES_FOLDER / "content_test.jsonl"
+
+def read_json(name_path, name_file: str):
+    name_json_file = name_path / name_file
+
+    with open(name_json_file, "r", encoding="utf-8") as file:
+        data = json.load(file)
+        return data
+        
+def export_json(content, name_path, name_file="content.json") -> None:
+    name_json_file = name_path / name_file
+
+    with open(name_json_file, "w", encoding="utf-8") as file:
+        json.dump(content, file, indent=4, ensure_ascii=False)
 
 def extract_base():
-    df = pd.read_excel(BASE_FOLDER / "base_presos.xlsx", sheet_name="base_resume")
+    df = pd.read_excel(FILES_FOLDER / "base_presos.xlsx", sheet_name="base_resume")
+    df = df[df['Elegibilidade'].isna()]
+    df = df[["TI", "AB"]]
     return df
+
+def json_to_excel(file):
+    content = read_json(FILES_FOLDER, file)
+
+    df = pd.DataFrame(content)
+    df.to_excel(FILES_FOLDER / "response.xlsx")
     
+def construct_payload(article_number):
+    df = extract_base()
+    df = df.head(article_number)
+
+    prompt_path = FILES_FOLDER / "prompt.txt"
+
+    with open(prompt_path, "r", encoding="utf-8") as file:
+        prompt = file.read()
+
+    content = []
+
+    for index, row in df.iterrows():
+        article_content = f"Título: {row['TI']}\nResumo: {row['AB']}"
+        custom_id = f"artigo_{index}"
+
+        row_batch = {
+            "custom_id": custom_id,
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": {
+                "model": "gpt-5.4-mini", 
+                "messages": [
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": article_content}
+                ],
+                "temperature": 0.2 
+            }
+        }
+
+        content.append(row_batch)
+
+    with open(payload_content, "w", encoding="utf-8") as f:
+        for row in content:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+def send_openai():
+    my_file = client.files.create(
+        file=open(payload_content, "rb"),
+        purpose="batch"
+    )
+
+    file_id = my_file.id
+
+    batch = client.batches.create(
+        input_file_id=file_id,
+        endpoint="/v1/chat/completions",
+        completion_window="24h"
+    )
+
+    return batch.id
+
+def wait_processing():
+    batch_id = send_openai()
+    status = "validating"
+
+    while status not in ["failed", "completed", "cancelled"]:
+        time.sleep(10)
+        os.system("cls")
+        
+        batch = client.batches.retrieve(batch_id)
+        status = batch.status
+        print(f"Status atual: {status}")
+
+    if status in ["processed", "completed"]:
+        return batch.output_file_id
+
+    else:
+        print("Houve um erro no processamento.")
+        print(batch.status)
+        print(batch.errors)
+
+def get_only_answers():
+    output_file_id = wait_processing()
+    file = client.files.content(output_file_id)
+
+    responses = []
+
+    for line in file.text.splitlines():
+        data = json.loads(line)
+        
+        content = data["response"]["body"]["choices"][0]["message"]["content"]
+        custom_id = data["custom_id"]
+
+        responses.append({
+            "id": custom_id,
+            "resposta": content
+        })
+
+    export_json(responses, FILES_FOLDER, "response.json")
