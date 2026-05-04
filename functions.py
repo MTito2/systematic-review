@@ -9,7 +9,7 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 # payload_content = FILES_FOLDER / "content.jsonl"
-payload_content = FILES_FOLDER / "content_test.jsonl"
+payload_content = FILES_FOLDER / "payload.jsonl"
 
 def read_json(name_path, name_file: str):
     name_json_file = name_path / name_file
@@ -25,16 +25,11 @@ def export_json(content, name_path, name_file="content.json") -> None:
         json.dump(content, file, indent=4, ensure_ascii=False)
 
 def extract_base():
-    df = pd.read_excel(FILES_FOLDER / "base_presos.xlsx", sheet_name="base_resume")
+    df = pd.read_excel(FILES_FOLDER / "base_origin.xlsx", sheet_name="base_resume")
     df = df[df['Elegibilidade'].isna()]
     df = df[["TI", "AB"]]
+    df.to_excel(FILES_FOLDER / "base_formatted.xlsx")
     return df
-
-def json_to_excel(file):
-    content = read_json(FILES_FOLDER, file)
-
-    df = pd.DataFrame(content)
-    df.to_excel(FILES_FOLDER / "response.xlsx")
     
 def construct_payload(article_number):
     df = extract_base()
@@ -125,3 +120,7 @@ def get_only_answers():
         })
 
     export_json(responses, FILES_FOLDER, "response.json")
+    df = pd.DataFrame(responses)
+    df.to_excel(FILES_FOLDER / "response.xlsx")
+
+
