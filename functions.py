@@ -133,6 +133,7 @@ def send_openai():
 def wait_processing():
 
     status = "validating"
+    batch
 
     while status not in ["failed", "completed", "cancelled"]:
         time.sleep(10)
@@ -141,7 +142,6 @@ def wait_processing():
         batches = read_txt(FILES_FOLDER, "batches.txt")
 
         for batch_id in batches:
-            os.system("cls")
             batch = client.batches.retrieve(batch_id)
             status = batch.status
             print(f"Id: {batch_id}")
@@ -151,6 +151,8 @@ def wait_processing():
             if status in ["processed", "completed"]:
                 export_txt(batch.output_file_id, FILES_FOLDER, "batch_output_id.txt")
 
+            # SALVAR OUTPUT EM UM SET E SO DEPOIS QUE PROCESSAR TODOS SALVAR NO TXT
+            # DIVIDIR O GET_ONLY
 
 
 def get_only_answers():
