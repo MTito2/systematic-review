@@ -117,7 +117,7 @@ def construct_payload():
 
 def send_openai():
     clean_txt("batches.txt")
-    
+
     for i in range(5):
         payload_path = FILES_FOLDER / f"payload_content_{i + 1}.jsonl"
 
@@ -134,7 +134,6 @@ def send_openai():
             completion_window="24h"
         )
 
-        
         export_txt(batch.id, FILES_FOLDER, "batches.txt", "a")
 
 def wait_processing():
@@ -180,5 +179,5 @@ def get_only_answers():
     df = pd.DataFrame(responses)
     df.to_excel(FILES_FOLDER / "response.xlsx")
 
-send_openai()
-wait_processing()
+#testar mandar 5 arquivos e ver se gera o output no txt corretamente
+# se gerar configurar nova função para extrair os dados
