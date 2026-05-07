@@ -1,6 +1,6 @@
 import os, json, time
 import pandas as pd
-from config import FILES_FOLDER
+from config import FILES_FOLDER, RESPONSE_FOLDER
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -154,30 +154,35 @@ def wait_processing():
 
 
             if status in ["processed", "completed"]:
-                export_txt(batch.output_file_idutputs, FILES_FOLDER, "batch_output_id.txt", "a")
+                export_txt(batch.output_file_id, FILES_FOLDER, "batch_output_id.txt", "a")
 
 
 
 def get_only_answers():
-    output_file_id = wait_processing()
-    file = client.files.content(output_file_id)
+    outputs_id = read_txt(FILES_FOLDER, "batch_output_id.txt")
+    counter = 1
 
-    responses = []
+    for output in outputs_id:
+        file = client.files.content(output)
 
-    for line in file.text.splitlines():
-        data = json.loads(line)
-        
-        content = data["response"]["body"]["choices"][0]["message"]["content"]
-        custom_id = data["custom_id"]
+        responses = []
 
-        responses.append({
-            "id": custom_id,
-            "resposta": content
-        })
+        for line in file.text.splitlines():
+            data = json.loads(line)
+            
+            content = data["response"]["body"]["choices"][0]["message"]["content"]
+            custom_id = data["custom_id"]
 
-    export_json(responses, FILES_FOLDER, "response.json")
-    df = pd.DataFrame(responses)
-    df.to_excel(FILES_FOLDER / "response.xlsx")
+            responses.append({
+                "id": custom_id,
+                "resposta": content
+            })
 
-#testar mandar 5 arquivos e ver se gera o output no txt corretamente
-# se gerar configurar nova função para extrair os dados
+        export_json(responses, RESPONSE_FOLDER, f"response_{counter}.json")
+        df = pd.DataFrame(responses)
+        df.to_excel(RESPONSE_FOLDER / f"response_{counter}.xlsx")
+        counter += 1
+
+# send_openai()
+# wait_processing()
+get_only_answers()
