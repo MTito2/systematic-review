@@ -183,6 +183,39 @@ def get_only_answers():
         df.to_excel(RESPONSE_FOLDER / f"response_{counter}.xlsx")
         counter += 1
 
-# send_openai()
-# wait_processing()
-get_only_answers()
+def get_only_answers_unique(output_id):
+
+
+    file = client.files.content(output_id)
+
+    responses = []
+
+    for line in file.text.splitlines():
+        data = json.loads(line)
+        
+        content = data["response"]["body"]["choices"][0]["message"]["content"]
+        custom_id = data["custom_id"]
+
+        responses.append({
+            "id": custom_id,
+            "resposta": content
+        })
+
+    export_json(responses, RESPONSE_FOLDER, f"response.json")
+    df = pd.DataFrame(responses)
+    df.to_excel(RESPONSE_FOLDER / f"response.xlsx")
+
+
+# batch = client.batches.retrieve("batch_69fc6ae1aec08190bf62d78d63591afc")
+# print(batch.input_file_id)
+
+new_batch = client.batches.create(
+    input_file_id="file-Lairk22izcQ6E16nwGThN6",
+    endpoint="/v1/chat/completions",
+    completion_window="24h"
+)
+
+print(new_batch)
+
+
+# get_only_answers_unique("file-CUtDQyX8sQmQgoBR8aAK3g")
