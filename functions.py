@@ -34,10 +34,10 @@ def export_json(content, name_path, name_file="content.json") -> None:
     with open(name_json_file, "w", encoding="utf-8") as file:
         json.dump(content, file, indent=4, ensure_ascii=False)
 
-def export_txt(content, name_path, name_file) :
+def export_txt(content, name_path, name_file, type) :
     name_file_txt = name_path / name_file
 
-    with open(name_file_txt, "a", encoding="utf-8") as file:
+    with open(name_file_txt, type, encoding="utf-8") as file:
         file.writelines(f"{content}\n")
 
 def read_txt(name_path, name_file) :
@@ -46,7 +46,11 @@ def read_txt(name_path, name_file) :
     with open(name_file_txt, "r", encoding="utf-8") as file:
         content = file.read()
 
-    return content.split("\n")[:-1]
+    return set(content.split("\n")[:-1])
+
+def clean_txt(file_name):
+    file_name = FILES_FOLDER / file_name
+    open(file_name, "w").close()
 
 
 def extract_base():
@@ -112,6 +116,8 @@ def construct_payload():
         couter_articles += 1
 
 def send_openai():
+    clean_txt("batches.txt")
+    
     for i in range(5):
         payload_path = FILES_FOLDER / f"payload_content_{i + 1}.jsonl"
 
@@ -128,12 +134,11 @@ def send_openai():
             completion_window="24h"
         )
 
-        export_txt(batch.id, FILES_FOLDER, "batches.txt")
+        
+        export_txt(batch.id, FILES_FOLDER, "batches.txt", "a")
 
 def wait_processing():
-
     status = "validating"
-    batch
 
     while status not in ["failed", "completed", "cancelled"]:
         time.sleep(10)
@@ -148,11 +153,10 @@ def wait_processing():
             print(f"Status: {status}")
             print()
 
-            if status in ["processed", "completed"]:
-                export_txt(batch.output_file_id, FILES_FOLDER, "batch_output_id.txt")
 
-            # SALVAR OUTPUT EM UM SET E SO DEPOIS QUE PROCESSAR TODOS SALVAR NO TXT
-            # DIVIDIR O GET_ONLY
+            if status in ["processed", "completed"]:
+                export_txt(batch.output_file_idutputs, FILES_FOLDER, "batch_output_id.txt", "a")
+
 
 
 def get_only_answers():
