@@ -204,18 +204,3 @@ def get_only_answers_unique(output_id):
     export_json(responses, RESPONSE_FOLDER, f"response.json")
     df = pd.DataFrame(responses)
     df.to_excel(RESPONSE_FOLDER / f"response.xlsx")
-
-
-# batch = client.batches.retrieve("batch_69fc6ae1aec08190bf62d78d63591afc")
-# print(batch.input_file_id)
-
-new_batch = client.batches.create(
-    input_file_id="file-Lairk22izcQ6E16nwGThN6",
-    endpoint="/v1/chat/completions",
-    completion_window="24h"
-)
-
-print(new_batch)
-
-
-# get_only_answers_unique("file-CUtDQyX8sQmQgoBR8aAK3g")
