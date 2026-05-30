@@ -54,7 +54,7 @@ def clean_txt(file_name):
 
 
 def extract_base():
-    df = pd.read_excel(FILES_FOLDER / "base_origin.xlsx", sheet_name="Base_Presos (2)")
+    df = pd.read_excel(FILES_FOLDER / "base_origin.xlsx")
     df = df[df['Elegibilidade'].isna()]
     df = df[["TI", "AB"]]
     df.to_excel(FILES_FOLDER / "base_formatted.xlsx")
